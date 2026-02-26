@@ -10,11 +10,9 @@ export function ModeSelector() {
   const isInitialized = useStore((s) => s.isInitialized);
   const isPlaying = useStore((s) => s.isPlaying);
 
-  const accent = MODE_ACCENT[mode];
-
   return (
     <div className="relative">
-      <div className="flex gap-1.5 p-1 rounded-2xl bg-surface-1 border border-white/[0.03]">
+      <div className="flex gap-2 p-2 rounded-2xl bg-surface-1 border border-white/[0.05]">
         {MODES.map((m) => {
           const config = MODE_CONFIGS[m];
           const a = MODE_ACCENT[m];
@@ -26,10 +24,11 @@ export function ModeSelector() {
               onClick={() => isInitialized && setMode(m)}
               disabled={!isInitialized}
               className={`
-                relative flex-1 py-3 px-2 rounded-xl transition-all duration-500 ease-out
+                relative flex-1 rounded-xl transition-all duration-500 ease-out
                 disabled:opacity-30 disabled:cursor-not-allowed
                 ${active ? 'z-10' : 'hover:bg-white/[0.03]'}
               `}
+              style={{ padding: '14px 8px' }}
             >
               {/* Active background glow */}
               {active && (
@@ -45,7 +44,7 @@ export function ModeSelector() {
                 />
               )}
 
-              <div className="relative flex flex-col items-center gap-0.5">
+              <div className="relative flex flex-col items-center" style={{ gap: '4px' }}>
                 <span
                   className="text-[10px] font-mono tabular-nums transition-colors duration-300"
                   style={{ color: active ? a.color : undefined }}
@@ -61,8 +60,9 @@ export function ModeSelector() {
                 </span>
                 {/* Active dot */}
                 <div
-                  className="w-1 h-1 rounded-full mt-0.5 transition-all duration-500"
+                  className="w-1 h-1 rounded-full transition-all duration-500"
                   style={{
+                    marginTop: '2px',
                     background: active ? a.color : 'transparent',
                     boxShadow: active && isPlaying ? `0 0 6px ${a.color}` : 'none',
                   }}

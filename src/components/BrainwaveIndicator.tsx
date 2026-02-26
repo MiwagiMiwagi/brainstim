@@ -1,12 +1,8 @@
 import { useStore } from '../store/useStore';
-import { BRAINWAVE_RANGES, type EntrainmentMode } from '../audio/types';
+import { BRAINWAVE_RANGES } from '../audio/types';
+import { MODE_ACCENT } from '../audio/constants';
 
-const MODE_ACCENT: Record<EntrainmentMode, string> = {
-  focus: '#6366f1',
-  relax: '#10b981',
-  meditate: '#f59e0b',
-  sleep: '#8b5cf6',
-};
+const BAND_ENTRIES = Object.entries(BRAINWAVE_RANGES);
 
 export function BrainwaveIndicator() {
   const entrainmentHz = useStore((s) => s.entrainmentHz);
@@ -14,44 +10,61 @@ export function BrainwaveIndicator() {
   const isPlaying = useStore((s) => s.isPlaying);
   const accent = MODE_ACCENT[mode];
 
-  // Determine which brainwave band the current Hz falls in
-  const activeBand = Object.entries(BRAINWAVE_RANGES).find(
-    ([_, range]) => entrainmentHz >= range.min && entrainmentHz <= range.max
+  const activeBand = BAND_ENTRIES.find(
+    ([, range]) => entrainmentHz >= range.min && entrainmentHz <= range.max
   );
 
   return (
-    <div className="bg-surface-1 rounded-xl p-4">
-      <div className="text-xs text-text-muted mb-3 uppercase tracking-wider">Brainwave Spectrum</div>
-
-      <div className="flex gap-1 h-8 items-end">
-        {Object.entries(BRAINWAVE_RANGES).map(([key, range]) => {
+    <div className="glass rounded-xl" style={{ padding: '16px 16px 14px' }}>
+      {/* Spectrum bars */}
+      <div className="flex items-end" style={{ gap: '8px', height: '68px' }}>
+        {BAND_ENTRIES.map(([key, range]) => {
           const isActive = activeBand?.[0] === key;
-          // Normalized position of entrainmentHz within this band
           const fillPct = isActive
             ? ((entrainmentHz - range.min) / (range.max - range.min)) * 100
             : 0;
 
           return (
-            <div key={key} className="flex-1 flex flex-col items-center gap-1">
+            <div key={key} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
               <div
-                className="w-full rounded-sm transition-all duration-500 relative overflow-hidden"
                 style={{
-                  height: isActive ? '32px' : '16px',
-                  background: isActive ? accent + '30' : '#232333',
+                  width: '100%',
+                  borderRadius: '6px',
+                  position: 'relative',
+                  overflow: 'hidden',
+                  transition: 'all 0.7s ease-out',
+                  height: isActive ? '42px' : '14px',
+                  background: isActive ? `${accent.color}15` : 'rgba(255,255,255,0.03)',
+                  border: isActive ? `1px solid ${accent.color}20` : '1px solid transparent',
                 }}
               >
-                {isActive && isPlaying && (
-                  <div
-                    className="absolute bottom-0 left-0 w-full rounded-sm transition-all duration-300"
-                    style={{
-                      height: `${Math.max(20, fillPct)}%`,
-                      background: accent,
-                      animation: 'pulse-glow 2s ease-in-out infinite',
-                    }}
-                  />
-                )}
+                {/* Fill bar */}
+                <div
+                  style={{
+                    position: 'absolute',
+                    bottom: 0,
+                    left: 0,
+                    width: '100%',
+                    borderRadius: '6px',
+                    transition: 'all 0.5s',
+                    height: isActive ? `${Math.max(25, fillPct)}%` : '0%',
+                    background: isActive
+                      ? `linear-gradient(to top, ${accent.color}, ${accent.color}80)`
+                      : 'transparent',
+                    boxShadow: isActive && isPlaying ? `0 0 12px ${accent.color}40` : 'none',
+                    animation: isActive && isPlaying ? 'breathe 2.5s ease-in-out infinite' : 'none',
+                  }}
+                />
               </div>
-              <span className={`text-[9px] font-mono ${isActive ? 'text-text-primary' : 'text-text-muted'}`}>
+              <span
+                className="font-mono"
+                style={{
+                  fontSize: '9px',
+                  lineHeight: 1,
+                  transition: 'color 0.5s',
+                  color: isActive ? accent.color : 'var(--color-text-muted)',
+                }}
+              >
                 {range.label}
               </span>
             </div>
@@ -59,10 +72,23 @@ export function BrainwaveIndicator() {
         })}
       </div>
 
+      {/* Active band label */}
       {activeBand && (
-        <div className="mt-2 text-center">
-          <span className="text-xs font-mono" style={{ color: accent }}>
-            {activeBand[1].label} — {activeBand[1].description}
+        <div
+          style={{
+            marginTop: '12px',
+            paddingTop: '12px',
+            textAlign: 'center',
+            transition: 'all 0.5s',
+            borderTop: `1px solid ${accent.color}10`,
+          }}
+        >
+          <span className="font-mono" style={{ fontSize: '11px', color: accent.color }}>
+            {activeBand[1].label}
+          </span>
+          <span style={{ fontSize: '11px', color: 'var(--color-text-muted)', margin: '0 8px' }}>/</span>
+          <span style={{ fontSize: '11px', color: 'var(--color-text-secondary)' }}>
+            {activeBand[1].description}
           </span>
         </div>
       )}

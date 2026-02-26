@@ -1,13 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { useStore } from '../store/useStore';
-import { MODE_CONFIGS, type EntrainmentMode } from '../audio/types';
-
-const MODE_ACCENT: Record<EntrainmentMode, string> = {
-  focus: '#6366f1',
-  relax: '#10b981',
-  meditate: '#f59e0b',
-  sleep: '#8b5cf6',
-};
+import { MODE_CONFIGS } from '../audio/types';
+import { MODE_ACCENT } from '../audio/constants';
 
 function formatTime(seconds: number): string {
   const m = Math.floor(seconds / 60);
@@ -34,7 +28,6 @@ export function TransportControls() {
   const accent = MODE_ACCENT[mode];
   const config = MODE_CONFIGS[mode];
 
-  // Timer
   useEffect(() => {
     if (isPlaying) {
       timerRef.current = setInterval(() => tick(), 1000);
@@ -52,44 +45,83 @@ export function TransportControls() {
   };
 
   return (
-    <div className="space-y-4">
-      {/* Play button + timer */}
-      <div className="flex items-center gap-4">
-        <button
-          onClick={handlePlay}
-          className="w-14 h-14 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-105 active:scale-95"
-          style={{
-            background: isPlaying ? accent : accent + '20',
-            boxShadow: isPlaying ? `0 0 30px ${accent}40` : 'none',
-          }}
-        >
-          {isPlaying ? (
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="white">
-              <rect x="4" y="3" width="4" height="14" rx="1" />
-              <rect x="12" y="3" width="4" height="14" rx="1" />
-            </svg>
-          ) : (
-            <svg width="20" height="20" viewBox="0 0 20 20" fill={accent}>
-              <polygon points="5,2 18,10 5,18" />
-            </svg>
+    <div className="space-y-5">
+      {/* Hero play section — centered */}
+      <div className="flex flex-col items-center gap-4 py-2">
+        {/* Play button with pulse rings */}
+        <div className="relative">
+          {/* Animated pulse rings when playing */}
+          {isPlaying && (
+            <>
+              <div
+                className="absolute inset-0 rounded-full"
+                style={{
+                  border: `1.5px solid ${accent.color}30`,
+                  animation: 'pulse-ring 2.5s ease-out infinite',
+                }}
+              />
+              <div
+                className="absolute inset-0 rounded-full"
+                style={{
+                  border: `1px solid ${accent.color}20`,
+                  animation: 'pulse-ring 2.5s ease-out infinite 0.8s',
+                }}
+              />
+            </>
           )}
-        </button>
 
-        <div>
-          <div className="text-2xl font-mono font-light tracking-wider" style={{ color: accent }}>
+          <button
+            onClick={handlePlay}
+            className="relative w-16 h-16 rounded-full flex items-center justify-center transition-all duration-500 hover:scale-105 active:scale-95"
+            style={{
+              background: isPlaying
+                ? `linear-gradient(135deg, ${accent.color}, ${accent.color}cc)`
+                : `linear-gradient(135deg, ${accent.color}20, ${accent.color}10)`,
+              boxShadow: isPlaying
+                ? `0 0 40px ${accent.glow}, 0 4px 20px ${accent.color}30`
+                : `0 0 0 1px ${accent.color}15`,
+            }}
+          >
+            {isPlaying ? (
+              <svg width="20" height="22" viewBox="0 0 20 22" fill="white">
+                <rect x="3" y="2" width="5" height="18" rx="1.5" />
+                <rect x="12" y="2" width="5" height="18" rx="1.5" />
+              </svg>
+            ) : (
+              <svg width="20" height="22" viewBox="0 0 20 22" style={{ marginLeft: 2 }}>
+                <polygon points="3,1 19,11 3,21" fill={accent.color} />
+              </svg>
+            )}
+          </button>
+        </div>
+
+        {/* Timer + mode label */}
+        <div className="text-center">
+          <div
+            className="text-3xl font-mono font-light tracking-[0.2em] tabular-nums transition-colors duration-500"
+            style={{ color: accent.color }}
+          >
             {formatTime(elapsedSeconds)}
           </div>
-          <div className="text-xs text-text-muted">
+          <div className="text-xs text-text-muted mt-1 tracking-wide">
             {config.description}
           </div>
         </div>
       </div>
 
-      {/* Entrainment frequency */}
-      <div>
-        <div className="flex justify-between text-xs text-text-muted mb-1">
-          <span>Entrainment Frequency</span>
-          <span className="font-mono" style={{ color: accent }}>{entrainmentHz.toFixed(1)} Hz</span>
+      {/* Entrainment frequency — the key control */}
+      <div className="space-y-2">
+        <div className="flex items-baseline justify-between">
+          <span className="text-[11px] text-text-secondary font-medium uppercase tracking-wider">
+            Entrainment
+          </span>
+          <span
+            className="text-lg font-mono font-light tabular-nums transition-colors duration-300"
+            style={{ color: accent.color }}
+          >
+            {entrainmentHz.toFixed(1)}
+            <span className="text-xs text-text-muted ml-1">Hz</span>
+          </span>
         </div>
         <input
           type="range"
@@ -99,23 +131,25 @@ export function TransportControls() {
           value={entrainmentHz}
           onChange={(e) => setEntrainmentHz(parseFloat(e.target.value))}
           disabled={!isInitialized}
-          className="w-full"
-          style={{ accentColor: accent }}
+          style={{ '--slider-glow': accent.glow } as React.CSSProperties}
         />
-        <div className="flex justify-between text-[10px] text-text-muted mt-0.5 font-mono">
-          <span>0.5 Hz (Delta)</span>
-          <span>8 Hz (Alpha)</span>
-          <span>16 Hz (Beta)</span>
-          <span>40 Hz (Gamma)</span>
+        <div className="flex justify-between text-[9px] text-text-muted font-mono">
+          <span>0.5 Delta</span>
+          <span>4 Theta</span>
+          <span>8 Alpha</span>
+          <span>16 Beta</span>
+          <span>40 Gamma</span>
         </div>
       </div>
 
-      {/* Master controls row */}
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <div className="flex justify-between text-xs text-text-muted mb-1">
-            <span>Master Volume</span>
-            <span className="font-mono">{Math.round(masterVolume * 100)}%</span>
+      {/* Master controls */}
+      <div className="grid grid-cols-2 gap-6">
+        <div className="space-y-1">
+          <div className="flex justify-between items-baseline">
+            <span className="text-[10px] text-text-muted uppercase tracking-wider">Vol</span>
+            <span className="text-[11px] font-mono text-text-secondary tabular-nums">
+              {Math.round(masterVolume * 100)}
+            </span>
           </div>
           <input
             type="range"
@@ -125,13 +159,14 @@ export function TransportControls() {
             value={masterVolume}
             onChange={(e) => setMasterVolume(parseFloat(e.target.value))}
             disabled={!isInitialized}
-            className="w-full"
           />
         </div>
-        <div>
-          <div className="flex justify-between text-xs text-text-muted mb-1">
-            <span>Reverb</span>
-            <span className="font-mono">{Math.round(reverbWet * 100)}%</span>
+        <div className="space-y-1">
+          <div className="flex justify-between items-baseline">
+            <span className="text-[10px] text-text-muted uppercase tracking-wider">Space</span>
+            <span className="text-[11px] font-mono text-text-secondary tabular-nums">
+              {Math.round(reverbWet * 100)}
+            </span>
           </div>
           <input
             type="range"
@@ -141,7 +176,6 @@ export function TransportControls() {
             value={reverbWet}
             onChange={(e) => setReverbWet(parseFloat(e.target.value))}
             disabled={!isInitialized}
-            className="w-full"
           />
         </div>
       </div>

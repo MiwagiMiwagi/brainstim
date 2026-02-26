@@ -168,18 +168,19 @@ export function Visualizer() {
   }, [isPlaying, draw, accent.color]);
 
   return (
-    <div className="relative">
+    <div className="relative glass rounded-2xl overflow-hidden">
       {/* Ambient glow behind canvas */}
       <div
-        className="absolute inset-0 rounded-2xl transition-opacity duration-1000 blur-2xl"
+        className="absolute inset-0 transition-opacity duration-1000 blur-xl"
         style={{
-          background: `radial-gradient(ellipse at center, ${accent.color}10, transparent 70%)`,
+          background: `radial-gradient(ellipse 60% 80% at 50% 50%, ${accent.color}0c, transparent 70%)`,
           opacity: isPlaying ? 1 : 0.3,
         }}
       />
       <canvas
         ref={canvasRef}
-        className="relative w-full h-44 sm:h-52 rounded-2xl"
+        className="relative w-full rounded-2xl"
+        style={{ height: isPlaying ? '160px' : '100px', transition: 'height 0.8s ease' }}
       />
     </div>
   );

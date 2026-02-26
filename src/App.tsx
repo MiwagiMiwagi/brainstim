@@ -4,72 +4,99 @@ import { LayerMixer } from './components/LayerMixer';
 import { Visualizer } from './components/Visualizer';
 import { BrainwaveIndicator } from './components/BrainwaveIndicator';
 import { useStore } from './store/useStore';
-import type { EntrainmentMode } from './audio/types';
-
-const MODE_ACCENT: Record<EntrainmentMode, string> = {
-  focus: '#6366f1',
-  relax: '#10b981',
-  meditate: '#f59e0b',
-  sleep: '#8b5cf6',
-};
+import { MODE_ACCENT } from './audio/constants';
 
 function App() {
   const mode = useStore((s) => s.mode);
+  const isPlaying = useStore((s) => s.isPlaying);
   const accent = MODE_ACCENT[mode];
 
   return (
-    <div className="h-full flex flex-col bg-surface-0 overflow-y-auto">
-      {/* Header */}
-      <header className="px-6 pt-6 pb-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-semibold tracking-tight">
-              <span style={{ color: accent }} className="transition-colors duration-500">Brain</span>
-              <span className="text-text-secondary">Stim</span>
-            </h1>
-            <p className="text-xs text-text-muted mt-0.5">Neural Entrainment Audio Generator</p>
-          </div>
-          <div className="text-[10px] text-text-muted font-mono bg-surface-2 px-2 py-1 rounded">
-            Amplitude Modulation
-          </div>
-        </div>
-      </header>
+    <div
+      className="fixed inset-0 overflow-y-auto"
+      style={{ background: 'var(--color-surface-0)' }}
+    >
+      {/* Ambient background glow */}
+      <div
+        className="fixed inset-0 pointer-events-none transition-all duration-[2s] ease-out"
+        style={{
+          background: `
+            radial-gradient(ellipse 60% 40% at 50% 0%, ${accent.color}0a, transparent),
+            radial-gradient(circle at 30% 70%, ${accent.color}05, transparent 50%)
+          `,
+          opacity: isPlaying ? 1 : 0.5,
+        }}
+      />
 
-      {/* Main content */}
-      <main className="flex-1 px-6 pb-6 space-y-5 overflow-y-auto">
+      {/* Centered content column */}
+      <div
+        style={{
+          width: '100%',
+          maxWidth: '640px',
+          margin: '0 auto',
+          padding: '24px 20px 48px',
+          position: 'relative',
+          zIndex: 1,
+        }}
+      >
+        {/* Header */}
+        <header style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: '20px' }}>
+          <h1 className="text-lg font-semibold tracking-tight">
+            <span className="transition-colors duration-[1.5s]" style={{ color: accent.color }}>
+              Brain
+            </span>
+            <span className="text-text-muted font-light">Stim</span>
+          </h1>
+          <span
+            className="text-[9px] font-mono tracking-widest uppercase transition-colors duration-1000"
+            style={{ color: isPlaying ? `${accent.color}80` : 'var(--color-text-muted)' }}
+          >
+            Neural Entrainment
+          </span>
+        </header>
+
         {/* Mode selector */}
-        <ModeSelector />
+        <div style={{ marginBottom: '20px' }}>
+          <ModeSelector />
+        </div>
 
         {/* Visualizer */}
-        <div className="bg-surface-1 rounded-xl p-3">
+        <div style={{ marginBottom: '20px' }}>
           <Visualizer />
         </div>
 
-        {/* Brainwave indicator */}
-        <BrainwaveIndicator />
-
-        {/* Transport */}
-        <div className="bg-surface-1 rounded-xl p-4">
+        {/* Transport controls */}
+        <div className="glass rounded-2xl" style={{ padding: '24px', marginBottom: '20px' }}>
           <TransportControls />
         </div>
 
-        {/* Layer mixer */}
-        <div>
-          <div className="text-xs text-text-muted uppercase tracking-wider mb-2">Sound Layers</div>
+        {/* Brainwave indicator */}
+        <div style={{ marginBottom: '20px' }}>
+          <BrainwaveIndicator />
+        </div>
+
+        {/* Sound Layers */}
+        <div style={{ marginBottom: '24px' }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: '12px' }}>
+            <h2 className="text-[11px] text-text-muted uppercase tracking-widest font-medium">
+              Sound Layers
+            </h2>
+            <span className="text-[9px] text-text-muted font-mono">
+              AM @ 200Hz–1kHz
+            </span>
+          </div>
           <LayerMixer />
         </div>
 
-        {/* Info footer */}
-        <div className="text-[10px] text-text-muted leading-relaxed bg-surface-1 rounded-xl p-4 space-y-1">
-          <p>
-            Based on neural phase-locking research. Amplitude modulation at brainwave frequencies is applied
-            to the 200Hz-1kHz band of each sound layer, producing entrainment effects stronger than binaural beats.
+        {/* Footer */}
+        <footer style={{ paddingTop: '16px', borderTop: '1px solid rgba(255,255,255,0.04)' }}>
+          <p className="text-[10px] text-text-muted leading-relaxed">
+            Based on neural phase-locking research. Sine-wave amplitude modulation
+            at brainwave frequencies produces stronger entrainment than binaural beats.
+            Use 6+ min sessions at comfortable volume. Headphones recommended.
           </p>
-          <p>
-            For best results: use for 6+ minutes, keep volume at a comfortable level (60-70 dB), headphones recommended for binaural layer.
-          </p>
-        </div>
-      </main>
+        </footer>
+      </div>
     </div>
   );
 }

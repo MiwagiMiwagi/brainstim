@@ -1,29 +1,19 @@
 import { create } from 'zustand';
-import type { EntrainmentMode, LayerId, LayerParams, NoiseType } from '../audio/types';
+import type { EntrainmentMode, LayerId, LayerParams, NoiseTexture } from '../audio/types';
 import { MODE_CONFIGS } from '../audio/types';
 import { getEngine } from '../audio/engine';
 
 interface BrainStimState {
-  // Transport
   isPlaying: boolean;
   isInitialized: boolean;
-
-  // Mode
   mode: EntrainmentMode;
   entrainmentHz: number;
-
-  // Layers
   layers: Record<LayerId, LayerParams>;
-
-  // Master
   masterVolume: number;
   reverbWet: number;
-  noiseType: NoiseType;
-
-  // Timer
+  noiseTexture: NoiseTexture;
   elapsedSeconds: number;
 
-  // Actions
   init: () => Promise<void>;
   togglePlay: () => void;
   setMode: (mode: EntrainmentMode) => void;
@@ -33,7 +23,7 @@ interface BrainStimState {
   setLayerEnabled: (id: LayerId, enabled: boolean) => void;
   setMasterVolume: (volume: number) => void;
   setReverbWet: (wet: number) => void;
-  setNoiseType: (type: NoiseType) => void;
+  setNoiseTexture: (texture: NoiseTexture) => void;
   tick: () => void;
 }
 
@@ -58,7 +48,7 @@ export const useStore = create<BrainStimState>((set, get) => ({
   layers: defaultLayers('focus'),
   masterVolume: 0.8,
   reverbWet: 0.25,
-  noiseType: 'pink',
+  noiseTexture: 'pink',
   elapsedSeconds: 0,
 
   init: async () => {
@@ -70,74 +60,53 @@ export const useStore = create<BrainStimState>((set, get) => ({
   togglePlay: () => {
     const { isPlaying, isInitialized } = get();
     if (!isInitialized) return;
-
     const engine = getEngine();
-    if (isPlaying) {
-      engine.stop();
-    } else {
-      engine.play();
-    }
-    set({ isPlaying: !isPlaying, elapsedSeconds: isPlaying ? 0 : 0 });
+    if (isPlaying) engine.stop(); else engine.play();
+    set({ isPlaying: !isPlaying, elapsedSeconds: 0 });
   },
 
   setMode: (mode) => {
     const config = MODE_CONFIGS[mode];
     const engine = getEngine();
     engine.setMode(mode, config);
-    set({
-      mode,
-      entrainmentHz: config.entrainmentHz,
-      layers: defaultLayers(mode),
-    });
+    set({ mode, entrainmentHz: config.entrainmentHz, layers: defaultLayers(mode) });
   },
 
   setEntrainmentHz: (hz) => {
-    const engine = getEngine();
-    engine.setEntrainmentHz(hz);
+    getEngine().setEntrainmentHz(hz);
     set({ entrainmentHz: hz });
   },
 
   setLayerVolume: (id, volume) => {
-    const engine = getEngine();
-    engine.setLayerVolume(id, volume);
-    set((s) => ({
-      layers: { ...s.layers, [id]: { ...s.layers[id], volume } },
-    }));
+    getEngine().setLayerVolume(id, volume);
+    set((s) => ({ layers: { ...s.layers, [id]: { ...s.layers[id], volume } } }));
   },
 
   setLayerModDepth: (id, depth) => {
-    const engine = getEngine();
-    engine.setLayerModDepth(id, depth);
-    set((s) => ({
-      layers: { ...s.layers, [id]: { ...s.layers[id], modDepth: depth } },
-    }));
+    getEngine().setLayerModDepth(id, depth);
+    set((s) => ({ layers: { ...s.layers, [id]: { ...s.layers[id], modDepth: depth } } }));
   },
 
   setLayerEnabled: (id, enabled) => {
     const engine = getEngine();
     const layer = get().layers[id];
     engine.setLayerVolume(id, enabled ? layer.volume : 0);
-    set((s) => ({
-      layers: { ...s.layers, [id]: { ...s.layers[id], enabled } },
-    }));
+    set((s) => ({ layers: { ...s.layers, [id]: { ...s.layers[id], enabled } } }));
   },
 
   setMasterVolume: (volume) => {
-    const engine = getEngine();
-    engine.setMasterVolume(volume);
+    getEngine().setMasterVolume(volume);
     set({ masterVolume: volume });
   },
 
   setReverbWet: (wet) => {
-    const engine = getEngine();
-    engine.setReverbWet(wet);
+    getEngine().setReverbWet(wet);
     set({ reverbWet: wet });
   },
 
-  setNoiseType: (type) => {
-    const engine = getEngine();
-    engine.setNoiseType(type);
-    set({ noiseType: type });
+  setNoiseTexture: (texture) => {
+    getEngine().setNoiseTexture(texture);
+    set({ noiseTexture: texture });
   },
 
   tick: () => {
